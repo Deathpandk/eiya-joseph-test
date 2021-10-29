@@ -1,8 +1,5 @@
-from datetime import date
-
 from django.db import IntegrityError
 from django.test import TestCase
-from django.urls import reverse_lazy
 
 from cities.models import City, Distance
 
