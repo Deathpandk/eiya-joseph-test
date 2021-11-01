@@ -9,7 +9,7 @@ class City(models.Model):
 class Distance(models.Model):
     city_1 = models.ForeignKey('cities.City', on_delete=models.CASCADE, related_name='distance_1')
     city_2 = models.ForeignKey('cities.City', on_delete=models.CASCADE, related_name='distance_2')
-    distance = models.FloatField()
+    distance = models.FloatField(help_text='kms')
 
     class Meta:
         unique_together = ('city_1', 'city_2')
