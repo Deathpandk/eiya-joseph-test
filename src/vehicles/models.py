@@ -11,6 +11,9 @@ class Vehicle(models.Model):
     distance_traveled = models.FloatField(default=0)
     fuel_consumed = models.FloatField(default=0, help_text='lts')
 
+    def __str__(self):
+        return self.id
+
     def update_variables(self):
         distance_traveled = self.trip_set.aggregate(
             models.Sum('distance_traveled')
@@ -29,6 +32,11 @@ class Trip(models.Model):
 
     class Meta:
         ordering = ('-created',)
+
+    def __str__(self):
+        return '{} from {} to {} ({})'.format(
+            self.vehicle.id, self.origin.name, self.destiny.name, self.distance_traveled
+        )
 
     def get_distance_traveled(self):
         return get_distance(self.origin, self.destiny)
