@@ -1,10 +1,65 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div class="row">
+    <div class="row mt-3" id="main">
+    {v form_data v}
         <div class="col-12">
             <h1>Listado de Vehiculos</h1>
+            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#formModal"
+                @click="new_vehicle_form=true; empty_form_data()">
+                Nuevo Vehículo
+            </button>
         </div>
+        <div class="col-md-4 col-6 mt-2" v-for="vehicle in vehicle_list">
+            <div class="card">
+                <div class="card-header">
+                    {v vehicle.id v}
+                </div>
+                <div class="card-body">
+                    <p>Ciudad Actual: {v vehicle.current_location v}</p>
+                    <p>Consumo de Gasolina (km/lt): {v vehicle.fuel_consumption v}</p>
+                    <p>Distancia Recorrida (kms): {v vehicle.distance_traveled v}</p>
+                    <p>Combustible Consumido (lts): {v vehicle.fuel_consumed v}</p>
+                </div>
+            </div>
+        </div>
+
+    <div class="modal fade" tabindex="-1" role="dialog" id="formModal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 v-if="new_vehicle_form" class="modal-title">Nuevo Vehículo</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="id">Id</label>
+                        <input type="text" class="form-control" id="id" v-model="form_data.id">
+                    </div>
+                    <div class="form-group">
+                        <label for="current_location">Ciudad Actual</label>
+                        <select class="form-control" id="current_location" v-model="form_data.current_location">
+                            {% for city in cities %}
+                            <option value="{{ city.pk }}">{{ city.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="fuel_consumption">Consumo de Combustible (km/lt)</label>
+                        <input type="number" class="form-control" id="fuel_consumption" v-model="form_data.fuel_consumption">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" @click="create_vehicle">Guardar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     </div>
 {% endblock %}
 
@@ -12,18 +67,41 @@
 <script>var csrftoken = '{{csrf_token}}'</script>
 
 <script>
+    var api_url = '/api/vehicles'
     new Vue({
         el: '#main',
         delimiters: ['{v','v}'],
         data:{
             vehicle_list: [],
+            form_data: {
+                id: '', current_location: '', fuel_consumption: '',
+            },
+            new_vehicle_form: false,
         },
         methods: {
             get_vehicles(){
                 var self = this;
-                axios.get('/api/vehicles')
+                axios.get(api_url)
                 .then(function (response){
-                    self.vehicle_list = response.data,
+                    self.vehicle_list = response.data;
+                })
+            },
+            empty_form_data(){
+                this.form_data = {
+                   id: '', current_location: '', fuel_consumption: '',
+                }
+            },
+            create_vehicle(){
+                let data = new FormData();
+                data.append("csrfmiddlewaretoken", csrftoken)
+                data.append("id", this.form_data.id)
+                data.append("current_location", this.form_data.current_location)
+                data.append("fuel_consumption", this.form_data.fuel_consumption)
+                var self = this;
+                axios.post(api_url, data)
+                .then(function (response){
+                    self.vehicle_list.push(response.data);
+                    $('#formModal').modal('hide');
                 })
             }
         },
