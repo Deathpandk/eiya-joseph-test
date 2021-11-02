@@ -2,7 +2,6 @@
 
 {% block content %}
     <div class="row mt-3" id="main">
-    {v form_data v}
         <div class="col-12">
             <h1>Listado de Vehiculos</h1>
             <button type="button" class="btn btn-success" data-toggle="modal" data-target="#formModal"
@@ -14,6 +13,9 @@
             <div class="card">
                 <div class="card-header">
                     {v vehicle.id v}
+                    <a class="float-right" @click="new_vehicle_form=false; populate_form(vehicle)">
+                        <i class="fas fa-edit"></i>
+                    </a>
                 </div>
                 <div class="card-body">
                     <p>Ciudad Actual: {v vehicle.current_location v}</p>
@@ -29,12 +31,13 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 v-if="new_vehicle_form" class="modal-title">Nuevo Vehículo</h5>
+                    <h5 v-else="" class="modal-title">Editar {v form_data.id v}</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div class="form-group">
+                    <div class="form-group" v-if="new_vehicle_form">
                         <label for="id">Id</label>
                         <input type="text" class="form-control" id="id" v-model="form_data.id">
                     </div>
@@ -52,7 +55,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" @click="create_vehicle">Guardar</button>
+                    <button type="button" class="btn btn-primary" @click="save_form()">Guardar</button>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                 </div>
             </div>
@@ -79,6 +82,18 @@
             new_vehicle_form: false,
         },
         methods: {
+            empty_form_data(){
+                this.form_data = {
+                   id: '', current_location: '', fuel_consumption: '',
+                }
+            },
+            populate_form(obj){
+                this.updating_pk = obj.id;
+                this.form_data = {
+                    id: obj.id, current_location: obj.current_location, fuel_consumption: obj.fuel_consumption,
+                }
+                $('#formModal').modal('show');
+            },
             get_vehicles(){
                 var self = this;
                 axios.get(api_url)
@@ -86,24 +101,42 @@
                     self.vehicle_list = response.data;
                 })
             },
-            empty_form_data(){
-                this.form_data = {
-                   id: '', current_location: '', fuel_consumption: '',
-                }
-            },
-            create_vehicle(){
+            save_form(){
                 let data = new FormData();
                 data.append("csrfmiddlewaretoken", csrftoken)
                 data.append("id", this.form_data.id)
                 data.append("current_location", this.form_data.current_location)
                 data.append("fuel_consumption", this.form_data.fuel_consumption)
+                if(this.new_vehicle_form){
+                    this.create_vehicle(data);
+                }else{
+                    this.update_vehicle(data, this.form_data.id);
+                }
+            },
+            create_vehicle(data){
                 var self = this;
                 axios.post(api_url, data)
                 .then(function (response){
                     self.vehicle_list.push(response.data);
                     $('#formModal').modal('hide');
                 })
-            }
+            },
+            update_vehicle(data, pk){
+                var self = this;
+                axios.patch(api_url + '/' + pk, data)
+                .then(function (response){
+                    self.vehicle_list = self.vehicle_list.map(
+                        function (obj){
+                            if(obj.id == response.data.id){
+                                return response.data
+                            }else{
+                                return obj
+                            }
+                        }
+                    );
+                    $('#formModal').modal('hide');
+                })
+            },
         },
         mounted(){
             this.get_vehicles()
