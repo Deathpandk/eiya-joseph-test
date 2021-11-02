@@ -23,6 +23,10 @@ class Vehicle(models.Model):
         self.current_location = self.trip_set.first().destiny
         self.save()
 
+    @property
+    def current_location_name(self):
+        return self.current_location.name
+
 class Trip(models.Model):
     vehicle = models.ForeignKey('vehicles.Vehicle', on_delete=models.CASCADE)
     origin = models.ForeignKey('cities.City', on_delete=models.PROTECT, related_name='trips_send')

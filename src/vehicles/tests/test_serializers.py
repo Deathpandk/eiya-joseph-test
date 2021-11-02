@@ -18,6 +18,7 @@ class TestVehicleSerializer(TestCase):
         keys = serializer.data.keys()
         self.assertTrue('id' in keys)
         self.assertTrue('current_location' in keys)
+        self.assertTrue('current_location_name' in keys)
         self.assertTrue('fuel_consumption' in keys)
         self.assertTrue('distance_traveled' in keys)
         self.assertTrue('fuel_consumed' in keys)

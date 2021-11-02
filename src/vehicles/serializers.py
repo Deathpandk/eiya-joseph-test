@@ -5,8 +5,8 @@ from vehicles.models import Trip, Vehicle
 class VehicleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vehicle
-        fields = ('id', 'current_location', 'fuel_consumption', 'distance_traveled', 'fuel_consumed')
-        read_only_fields = ('distance_traveled', 'fuel_consumed')
+        fields = ('id', 'current_location', 'current_location_name', 'fuel_consumption', 'distance_traveled', 'fuel_consumed')
+        read_only_fields = ('current_location_name', 'distance_traveled', 'fuel_consumed')
 
 class TripSerializer(serializers.ModelSerializer):
     class Meta:
