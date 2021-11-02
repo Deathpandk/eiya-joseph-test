@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-12">
+            <h1>Listado de Vehiculos</h1>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+<script>var csrftoken = '{{csrf_token}}'</script>
+
+<script>
+    new Vue({
+        el: '#main',
+        delimiters: ['{v','v}'],
+        data:{
+            vehicle_list: [],
+        },
+        methods: {
+            get_vehicles(){
+                var self = this;
+                axios.get('/api/vehicles')
+                .then(function (response){
+                    self.vehicle_list = response.data,
+                })
+            }
+        },
+        mounted(){
+            this.get_vehicles()
+        },
+    })
+</script>
+{% endblock %}
