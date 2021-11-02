@@ -13,7 +13,10 @@
             <div class="card">
                 <div class="card-header">
                     {v vehicle.id v}
-                    <a class="float-right" @click="new_vehicle_form=false; populate_form(vehicle)">
+                    <a class="float-right" @click="delete_vehicle(vehicle.id)">
+                        <i class="fas fa-trash-alt"></i>
+                    </a>
+                    <a class="float-right mr-3" @click="new_vehicle_form=false; populate_form(vehicle)">
                         <i class="fas fa-edit"></i>
                     </a>
                 </div>
@@ -23,9 +26,16 @@
                     <p>Distancia Recorrida (kms): {v vehicle.distance_traveled v}</p>
                     <p>Combustible Consumido (lts): {v vehicle.fuel_consumed v}</p>
                 </div>
+                <div class="card-footer">
+                    <button type="button" class="btn btn-success m-auto" data-toggle="modal" data-target="#tripModal"
+                            @click="trip_data.vehicle = vehicle.id; trip_data.origin = vehicle.current_location;">
+                        Nuevo Viaje
+                    </button>
+                </div>
             </div>
         </div>
 
+{# Vehicle Modal #}
     <div class="modal fade" tabindex="-1" role="dialog" id="formModal">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -62,6 +72,42 @@
         </div>
     </div>
 
+{#  Trip Modal  #}
+    <div class="modal fade" tabindex="-1" role="dialog" id="tripModal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nuevo Viaje de {v trip_data.vehicle v}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="origin">Origen</label>
+                        <select class="form-control" id="current_location" v-model="trip_data.origin">
+                            {% for city in cities %}
+                            <option value="{{ city.pk }}">{{ city.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="origin">Destino</label>
+                        <select class="form-control" id="current_location" v-model="trip_data.destiny">
+                            {% for city in cities %}
+                            <option value="{{ city.pk }}">{{ city.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" @click="create_trip()">Guardar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     </div>
 {% endblock %}
@@ -80,6 +126,9 @@
                 id: '', current_location: '', fuel_consumption: '',
             },
             new_vehicle_form: false,
+            trip_data:{
+                vehicle:'', origin: '', destiny: '',
+            },
         },
         methods: {
             empty_form_data(){
@@ -135,6 +184,29 @@
                         }
                     );
                     $('#formModal').modal('hide');
+                })
+            },
+            {#Todo: Confirmation Modal for deleting vehicles#}
+            delete_vehicle(pk){
+                var self = this;
+                axios.delete(api_url + '/' + pk)
+                .then(function (response){
+                    self.vehicle_list = self.vehicle_list.filter(
+                        obj => obj.id != pk
+                    )
+                })
+            },
+            create_trip(){
+                let data = new FormData();
+                data.append("csrfmiddlewaretoken", csrftoken)
+                data.append("vehicle", this.trip_data.vehicle)
+                data.append("origin", this.trip_data.origin)
+                data.append("destiny", this.trip_data.destiny)
+                var self = this;
+                axios.post('/api/trips', data)
+                .then(function (response){
+                    $('#tripModal').modal('hide');
+                    self.get_vehicles();
                 })
             },
         },
